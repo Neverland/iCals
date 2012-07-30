@@ -1,0 +1,673 @@
+<!DOCTYPE html
+		PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+     <title></title>
+     <style type="text/css">
+          * {
+	          padding: 0;
+	          margin: 0;
+          }
+
+          body {
+	          font-size: 14px;
+          }
+
+          table {
+	          border-collapse: collapse;
+	          border: none;
+          }
+
+          th { background: #eee; }
+
+          th,td {
+	          border: 1px #ccc solid;
+	          padding: 5px;
+	          text-align: center;
+          }
+
+          .calContainer {
+	          margin: 0 10px 10px 0;
+          }
+
+          .currentDay {
+	          background: red;
+          }
+
+          #cal {
+	          border: 2px solid red;
+	          overflow: hidden;
+	          height: 92%;
+	          padding: 10px;
+	          margin: 10px;
+          }
+
+          #cal div ,#cals .calContainer {
+	          float: left;
+	          margin: 0 3px 10px 0;
+	          height: 210px;
+          }
+
+          input {
+	          width: 30px;
+          }
+
+          .oldDay {
+	          color: #ccc;
+	          font-size: 14px;
+          }
+          #api { clear :both; margin: 0 auto; width: 900px; }
+          #api caption { font-weight: bold; }
+          #api td { text-align: left; }
+          #cals { overflow :hidden ; height:100%; }
+          #cals td ,#cals th {padding: 11px;}
+	      #cals .calContainer { padding: 10px; border: 2px solid #eee; overflow: hidden; height: 1%; }
+     </style>
+</head>
+<body>
+<h1>2012年台历</h1>
+<div id="cal"></div>
+
+<div id="cals"></div>
+<button id="_4"> 显示第4个例子</button>
+
+
+
+<script type="text/javascript">
+/*
+ * Copyright 2012 enix
+ * enix@foxmail.com
+ * Includes toolkit lib
+ * Date: 2012-6-29
+ */
+/*function Cal(P, O, fn) {
+	if (!P || !P.nodeType) {
+		return
+	}
+	var indicotar = arguments.callee,
+			Pb, Pr, that = this,
+			tk, doc;
+	if (!(this instanceof indicotar)) {
+		return that = new indicotar(P, O, fn);
+	}
+	Pb = indicotar.prototype;
+	Pb.constructor = indicotar;
+	Pr = {
+		meta:{
+			year:'\u5e74',
+			season:'\u5b63',
+			season2:'\u5b63\u5EA6',
+			month:'\u6708',
+			week:['\u65e5', '\u4e00', '\u4e8c', '\u4e09', '\u56db', '\u4e94', '\u516d'],
+			week2:'\u5468',
+			day:'\u65e5',
+			sel:'\u9009\u62e9',
+			cur:'\u672c',
+			prev:'\u4e0a',
+			next:'\u4e0b',
+			all:'\u5168',
+			today:'\u4eca'
+		},
+		dayTime:86400000,
+		util:function () {
+			Object.keys || (Object.keys = function (o) {
+				var t = [];
+				for (t[t.length] in o) {
+				}
+				return t;
+			})
+		}
+	};
+	Pb.toolKit || (Pb.toolKit = function () {
+		var S = arguments.callee;
+		S.prototype = {
+			is:function (o) {
+				return ({}).toString.call(o).slice(8, -1);
+			},
+			each:function (object, callback) {
+				var index, i = 0,
+						len = object.length >>> 0,
+						isO = ({}).toString.call(object).slice(8, -1) === 'Object';
+				if (isO) {
+					for (index in object) {
+						if (callback.call(object[index], object[index], index) === false) {
+							break;
+						}
+					}
+				} else {
+					for (; i < len;) {
+						if (callback.call(object[i], object[i], i++) === false) {
+							break;
+						}
+					}
+				}
+			},
+			getHtmlElement:function (O) {
+				var that = this;
+				that.element || (that.element = {});
+				that.element[O] || (that.element[O] = doc.createElement(O));
+				return that.element[O].cloneNode(true);
+			},
+			getEvent:function (e) {
+				return e || window.event;
+			},
+			getTarget:function (e) {
+				return e.srcElement || e.target;
+			},
+			addEvent:function (elem, evType, fn, capture) {
+				var indicator = arguments.callee;
+				elem && elem.attachEvent && (indicator = function (elem, evType, fn) {
+					elem.attachEvent('on' + evType, fn);
+				}).apply(this, arguments);
+				elem && elem.addEventListener && (indicator = function (elem, evType, fn) {
+					elem.addEventListener(evType, fn, capture || false);
+				}).apply(this, arguments);
+				elem && elem['on' + evType] && (indicator = function (elem, evType, fn) {
+					elem['on' + evType] = function () {
+						fn();
+					}
+				}).apply(this, arguments);
+			},
+			trigger:function (elem, evType) {
+				var event;
+				undefined !== doc.createEvent ? (event = doc.createEvent('MouseEvents'), event.initMouseEvent(evType, true, true, doc.defaultView, 0, 0, 0, 0, 0, false, false, false, false, 0, null), elem.dispatchEvent(event)) : (event = doc.createEventObject(), event.screenX = 100, event.screenY = 0, event.clientX = 0, event.clientY = 0, event.ctrlKey = false, event.altKey = false, event.shiftKey = false, event.button = false, elem.fireEvent('on' + evType, event));
+			}
+		};
+		if (window == this) {
+			return new S;
+		}
+	}());
+	Pb.init = function () {
+		doc = document || ownerDocument;
+		tk || (tk = Pb.toolKit);
+		indicotar.cache || (indicotar.cache = {});
+		that._OP_ = P;
+		that.Date = new Date;
+		O = O || ({});
+		that.frame = doc.createDocumentFragment();
+		that.endYear = O.EndYear || that.Date.getFullYear() + 10;
+		that.startYear = !isNaN(O.startYear) ? O.startYear : 2006;
+		that.Year = that.Date.getFullYear();
+		that.Month = that.Date.getMonth();
+		that.Day = that.Date.getDate();
+		that.startYear = Math.max(1970, that.startYear);
+		that.startYear = Math.min(that.startYear, that.Year);
+		that.time = +that.Date;
+		that.style = O.style || '-';
+		O && (tk.each(O, function (a, b) {
+			that[b] || (that[b] = a);
+		}));
+		if (that.Y) {
+			//that.Y = Math.max(that.startYear, that.Y);
+			//that.Y = Math.min(that.endYear, that.Y);
+			if (that.M) {
+				that.M = Math.abs(that.M) - 1;
+			}
+			//that.M = isNaN(that.M) ? that.Month : that.M;
+			//that.M = Math.max(that.M, 0);
+			//that.M = Math.min(that.M, 11)
+		}
+		that.hasTitle = O.hasTitle || 'true';
+		that.hasFoot = that.hasFoot || 'false';
+		'function' == typeof fn && (that.fn = fn);
+		that.createProperty().controlsFactory().createCalFrame().createTableTitle().createYear().createMonth();
+		that.addEvent();
+		return that;
+	};
+	Pb.createProperty = function () {
+		return that.elems = [
+			['div', 'class#calContainer'],//0
+			['div', 'class#calHeader'],//1
+			['div', 'class#calBody'],//2
+			['select', 'class#selectYear'],//3
+			['select', 'class#selectMonth'],//4
+			['input', 'type#button,class#calPrev,value#<'],//5
+			['input', 'type#button,class#calNext,value#>'],//6
+			['input', 'type#button,class#calPrevPro,value#«'],//7
+			['input', 'type#button,class#calNextPro,value#»'],//8
+			//['table', 'class#calBox'],//9
+			//['thead'],//10
+			//['tbody'],//11
+			//['tfoot'],//12
+			['input', 'type#button,class#calToday,value#' + Pr.meta.today]//13
+		], that
+	};
+	Pb.controlsFactory = function () {
+		var t, attr;
+		tk.each(that.elems, function (a, b) {
+			t = tk.getHtmlElement(a[0]);
+			a[1] && tk.each(a[1].split(','), function (x, y) {
+				attr = (attr = x.split('#'), attr[0] && t.setAttribute(attr[0], attr[1]));
+			});
+			that.elems.splice(b, 1, t);
+		});
+		return that
+	};
+	Pb.createCalFrame = function () {
+		var t = doc.createDocumentFragment(),
+				e = that.elems,
+				meta = Pr.meta,
+				w = Pr.meta.week,
+				len = w.lengthl;
+		e[1].appendChild(e[7]);
+		e[1].appendChild(e[5]);
+
+		e[1].appendChild(e[3]);
+		e[1].appendChild(doc.createTextNode(meta.year));
+		e[1].appendChild(e[4]);
+		e[1].appendChild(doc.createTextNode(meta.month));
+
+		//e[2].appendChild(e[9]);
+		e[1].appendChild(e[6]);
+		e[1].appendChild(e[8]);
+		e[1].appendChild(e[9]);
+
+		'true' === that.hasTitle && (e[0].appendChild(e[1]));
+		e[0].appendChild(e[2]);
+		that.frame.appendChild(e[0]);
+		'function' === that.oncalframe && that.oncalframe.call(that,that.frame);
+
+		return that
+	};
+	Pb.addEvent = function () {
+		var elems = that.elems,
+				nodes = [
+					[elems[3], 'change', function (e) {
+						e = tk.getEvent(e);
+						var target = tk.getTarget(e);
+						that.createDay(target.value, elems[4].value);
+					}],
+					[elems[4], 'change', function (e) {
+						e = tk.getEvent(e);
+						var target = tk.getTarget(e);
+						that.createDay(elems[3].value, target.value);
+					}],
+					[elems[6], 'click', function (e) {
+						var m = elems[4],
+								index = m.selectedIndex,
+								i, y = elems[3];
+						if (index + 1 <= 11) {
+							i = index + 1
+						} else {
+							if (y.value == that.endYear) {
+								y.options[y.length - 1].selected = ' ';
+								m.value = 0;
+								that.createDay(y.value, m.value);
+								return
+							}
+							i = 0;
+							y.selectedIndex = y.selectedIndex - 1
+						}
+						m.value = i;
+						m.selectedIndex = i;
+						y.value && that.createDay(y.value, m.value);
+					}],
+					[elems[5], 'click', function () {
+						var m = elems[4],
+								index = m.selectedIndex,
+								i, y = elems[3];
+						if (index - 1 >= 0) {
+							i = index - 1
+						} else {
+							if (y.value == that.startYear) {
+								y.selectedIndex = y.length;
+							}
+							i = 11;
+							y.selectedIndex = y.selectedIndex + 1;
+						}
+						m.value = i;
+						m.selectedIndex = i;
+						y.value && that.createDay(y.value, m.value);
+					}],
+					[elems[7], 'click', function () {
+						var y = +elems[3].value,
+								m = elems[4].value;
+						if (y-- <= that.startYear) {
+							return
+						}
+						elems[3].selectedIndex = y;
+						elems[3].value = y;
+						that.createDay(y, m) ;
+					}],
+					[elems[8], 'click', function () {
+						var y = +elems[3].value,
+								m = elems[4].value;
+						if (y++ >= that.endYear) {
+							return
+						}
+						elems[3].selectedIndex = y;
+						elems[3].value = y;
+						that.createDay(y, m);
+					}],
+					[elems[9], 'click', function () {
+						elems[3].selectedIndex = that.Year;
+						elems[3].value = that.Year;
+						elems[4].selectedIndex = that.Month;
+						elems[4].value = that.Month;
+						that.createDay(that.Year, that.Month);
+					}],
+					[elems[2], 'click', function (e) {
+						e = tk.getEvent(e);
+						var target = tk.getTarget(e),
+								val;
+						if (!/tr|tbody|thead|table/.test(target.nodeName.toLowerCase())) {
+							while (target.nodeName.toLowerCase() !== 'td') {
+								target = target.parentNode;
+							}
+							val = target.innerHTML;
+						}
+						!/thead|tfoot/.test(target.parentNode.parentNode.nodeName.toLocaleLowerCase())  && val && that.getDateValue(val);
+						return that
+					}]
+				], i = nodes.length;
+		while (i--) {
+			(function (t) {
+				tk.addEvent(t[0], t[1], function (e) {
+					'function' === typeof t[2] && t[2](e);
+				}, false)
+			})(nodes[i])
+		}
+		if (that.Y) {
+			tk.each(elems[3], function (a, b) {
+				elems.selectedIndex = b ;
+			});
+			elems[3].value = that.Y;
+			elems[4].selectedIndex = that.M;
+			that.createDay(that.Y, that.M);
+		} else {
+			tk.trigger(that.elems[9], 'click');
+		}
+		return that
+	};
+	Pb.getDateValue = function (val) {
+		var date = [], elems = this.elems;
+		date.push(+this.elems[3].value || this.Year);
+		date.push(+this.elems[4].value + 1 || this.Month);
+		date.push(+val || this.Day);
+		this.selectDate = date;
+		'function' === typeof this.ongetdate && this.ongetdate.call(this, date);
+		return this
+	};
+	//TODO: update
+	Pb.update = function () {
+	};
+	Pb.createTableTitle = function () {
+		var w = Pr.meta.week,
+				len = w.length,
+				html = [];
+		while (len--) {
+			html.push('<th title="'+w[len]+'">' + w[len] + '</th>');
+		}
+		that.title = '<thead>' + html.reverse().join('') + '</thead>';
+		return that
+	};
+	Pb.createYear = function () {
+		var t = [],
+				y, num;
+		y = that.endYear - that.startYear + 1;
+		while (y--) {
+			num = that.endYear - y;
+			that.elems[3].options[y] = new Option(num, num, num === that.Year);
+		}
+		return that
+	};
+	Pb.createMonth = function () {
+		var t = [],
+				m = 12;
+		while (m--) {
+			that.elems[4].options[m] = new Option(m + 1, m, m === that.Month);
+		}
+		return that
+	};
+	Pb.getMaxDays = function (year, month) {
+		var t = +month + 1;
+		month = t > 12 ? 1 : t;
+		year = t > 12 ? (+year + 1) : year;
+		return (new Date(+(new Date(year, month, 1)) - Pr.dayTime)).getDate();
+	};
+	Pb.getFirstDay = function (year, month) {
+		return new Date(year, month, 1).getDay();
+	};
+	Pb.createDay = function (Y, M) {
+		var that=this;
+		Y = +Y;
+		M = +M;
+
+
+		Y = Math.max(that.startYear, Y);
+		Y = Math.min(that.endYear, Y);
+
+		M = isNaN(M) ? that.Month : M;
+		M = Math.max(M, 0);
+		M = Math.min(M, 11);
+
+		var key = '_date_:' + Y + ':' + M,
+				elems = that.elems;
+		indicotar.cache[key] || (indicotar.cache[key] = that.getDateString(Y, M));
+		that.render(elems, key, Y, M);
+		return that
+	};
+	Pb.getDateString = function (y, m) {
+
+		var     that=this,
+				days = that.getMaxDays(y, m),
+				first = that.getFirstDay(y, m),
+				offset = days + first,
+				html = [],
+				row = Math.ceil(offset / 7),
+				cell = row * 7;
+		for (var i = 0; i < row; i++) {
+			html.push('</tr>');
+			for (var j = 0; j < 7; j++) {
+				html.push((cell-- <= offset && days > 0) ? ('<td ' + (that.Date > new Date(y, m, days + 1) ? 'class="oldDay"' : '') + (y === that.Year && m === that.Month && days === that.Day ? 'class="currentDay"' : '') + ' title="'+y+that.style+(m+1)+that.style+days+'">' + (days--) + '</td>') : '<td></td>');
+			}
+			html.push('<tr>');
+		}
+		html=html.reverse().join('');
+		('function'===typeof that.ongetdatestring) && that.ongetdatestring.call(that,html);
+		return html;
+	};
+	Pb.toString = function () {
+		return this.selectDate.join(this.style);
+	};
+	Pb.valueOf = function () {
+		return this.selectDate;
+	};
+	Pb.render = function (elems, key, y, m) {
+		var     that=this,
+				meta = Pr.meta,
+				tfoot;
+		if ('true' === that.hasFoot) {
+			tfoot = '<tfoot><tr><td colspan="7">' + y + meta.year + (m + 1) + meta.month + '</td></tr></tfoot>'
+			//tfoot = '<caption>'+ y + meta.year + (m + 1) + meta.month +'</caption>';
+		}
+		elems[2].innerHTML = '<table cellpadding="5" border="1" cellspacing="0">' + that.title + indicotar.cache[key] + ('true' === that.hasFoot ? tfoot : '') + '</table>';
+		that._OP_.appendChild(that.frame);
+		('function'===typeof that.onrender) && that.onrender.call(that,that.frame);
+		return that;
+	};
+	Pb.setCss = function (O) {
+		var value = [];
+		tk.is(O) === 'object' && (tk.each(O, function (a, b) {
+			value.push(b + ':' + a);
+		}));
+		this.elems[0].style.cssText = value.join(';')
+	};
+	Pb.show = function () {
+		this.elems[0].style.display = 'block';
+		return this
+	};
+	Pb.hide = function () {
+		this.elems[0].style.display = 'none';
+		return this
+	};
+	return that.init(), this.fn && this.fn(),this;
+}*/
+
+function Cal(c,d,f){if(!c||!c.nodeType){return}var a=arguments.callee,h,b,e=this,i,g;if(!(this instanceof a)){return e=new a(c,d,f)}h=a.prototype;h.constructor=a;b={meta:{year:"\u5e74",season:"\u5b63",season2:"\u5b63\u5EA6",month:"\u6708",week:["\u65e5","\u4e00","\u4e8c","\u4e09","\u56db","\u4e94","\u516d"],week2:"\u5468",day:"\u65e5",sel:"\u9009\u62e9",cur:"\u672c",prev:"\u4e0a",next:"\u4e0b",all:"\u5168",today:"\u4eca"},dayTime:86400000,util:function(){Object.keys||(Object.keys=function(k){var j=[];for(j[j.length] in k){}return j})}};h.toolKit||(h.toolKit=function(){var j=arguments.callee;j.prototype={is:function(k){return({}).toString.call(k).slice(8,-1)},each:function(m,p){var l,n=0,k=m.length>>>0,o=({}).toString.call(m).slice(8,-1)==="Object";if(o){for(l in m){if(p.call(m[l],m[l],l)===false){break}}}else{for(;n<k;){if(p.call(m[n],m[n],n++)===false){break}}}},getHtmlElement:function(l){var k=this;k.element||(k.element={});k.element[l]||(k.element[l]=g.createElement(l));return k.element[l].cloneNode(true)},getEvent:function(k){return k||window.event},getTarget:function(k){return k.srcElement||k.target},addEvent:function(o,n,m,l){var k=arguments.callee;o&&o.attachEvent&&(k=function(r,q,p){r.attachEvent("on"+q,p)}).apply(this,arguments);o&&o.addEventListener&&(k=function(r,q,p){r.addEventListener(q,p,l||false)}).apply(this,arguments);o&&o["on"+n]&&(k=function(r,q,p){r["on"+q]=function(){p()}}).apply(this,arguments)},trigger:function(m,l){var k;undefined!==g.createEvent?(k=g.createEvent("MouseEvents"),k.initMouseEvent(l,true,true,g.defaultView,0,0,0,0,0,false,false,false,false,0,null),m.dispatchEvent(k)):(k=g.createEventObject(),k.screenX=100,k.screenY=0,k.clientX=0,k.clientY=0,k.ctrlKey=false,k.altKey=false,k.shiftKey=false,k.button=false,m.fireEvent("on"+l,k))}};if(window==this){return new j}}());h.init=function(){g=document||ownerDocument;i||(i=h.toolKit);a.cache||(a.cache={});e._OP_=c;e.Date=new Date;d=d||({});e.frame=g.createDocumentFragment();e.endYear=d.EndYear||e.Date.getFullYear()+10;e.startYear=!isNaN(d.startYear)?d.startYear:2006;e.Year=e.Date.getFullYear();e.Month=e.Date.getMonth();e.Day=e.Date.getDate();e.startYear=Math.max(1970,e.startYear);e.startYear=Math.min(e.startYear,e.Year);e.time=+e.Date;e.style=d.style||"-";d&&(i.each(d,function(k,j){e[j]||(e[j]=k)}));if(e.Y){if(e.M){e.M=Math.abs(e.M)-1}}e.hasTitle=d.hasTitle||"true";e.hasFoot=e.hasFoot||"false";"function"==typeof f&&(e.fn=f);e.createProperty().controlsFactory().createCalFrame().createTableTitle().createYear().createMonth();e.addEvent();return e};h.createProperty=function(){return e.elems=[["div","class#calContainer"],["div","class#calHeader"],["div","class#calBody"],["select","class#selectYear"],["select","class#selectMonth"],["input","type#button,class#calPrev,value#<"],["input","type#button,class#calNext,value#>"],["input","type#button,class#calPrevPro,value#«"],["input","type#button,class#calNextPro,value#»"],["input","type#button,class#calToday,value#"+b.meta.today]],e};h.controlsFactory=function(){var k,j;i.each(e.elems,function(m,l){k=i.getHtmlElement(m[0]);m[1]&&i.each(m[1].split(","),function(n,o){j=(j=n.split("#"),j[0]&&k.setAttribute(j[0],j[1]))});e.elems.splice(l,1,k)});return e};h.createCalFrame=function(){var l=g.createDocumentFragment(),n=e.elems,m=b.meta,k=b.meta.week,j=k.lengthl;n[1].appendChild(n[7]);n[1].appendChild(n[5]);n[1].appendChild(n[3]);n[1].appendChild(g.createTextNode(m.year));n[1].appendChild(n[4]);n[1].appendChild(g.createTextNode(m.month));n[1].appendChild(n[6]);n[1].appendChild(n[8]);n[1].appendChild(n[9]);"true"===e.hasTitle&&(n[0].appendChild(n[1]));n[0].appendChild(n[2]);e.frame.appendChild(n[0]);"function"===e.oncalframe&&e.oncalframe.call(e,e.frame);return e};h.addEvent=function(){var k=e.elems,j=[[k[3],"change",function(n){n=i.getEvent(n);var m=i.getTarget(n);e.createDay(m.value,k[4].value)}],[k[4],"change",function(n){n=i.getEvent(n);var m=i.getTarget(n);e.createDay(k[3].value,m.value)}],[k[6],"click",function(q){var n=k[4],o=n.selectedIndex,p,r=k[3];if(o+1<=11){p=o+1}else{if(r.value==e.endYear){r.options[r.length-1].selected=" ";n.value=0;e.createDay(r.value,n.value);return}p=0;r.selectedIndex=r.selectedIndex-1}n.value=p;n.selectedIndex=p;r.value&&e.createDay(r.value,n.value)}],[k[5],"click",function(){var n=k[4],o=n.selectedIndex,p,q=k[3];if(o-1>=0){p=o-1}else{if(q.value==e.startYear){q.selectedIndex=q.length}p=11;q.selectedIndex=q.selectedIndex+1}n.value=p;n.selectedIndex=p;q.value&&e.createDay(q.value,n.value)}],[k[7],"click",function(){var o=+k[3].value,n=k[4].value;if(o--<=e.startYear){return}k[3].selectedIndex=o;k[3].value=o;e.createDay(o,n)}],[k[8],"click",function(){var o=+k[3].value,n=k[4].value;if(o++>=e.endYear){return}k[3].selectedIndex=o;k[3].value=o;e.createDay(o,n)}],[k[9],"click",function(){k[3].selectedIndex=e.Year;k[3].value=e.Year;k[4].selectedIndex=e.Month;k[4].value=e.Month;e.createDay(e.Year,e.Month)}],[k[2],"click",function(n){n=i.getEvent(n);var m=i.getTarget(n),o;if(!/tr|tbody|thead|table/.test(m.nodeName.toLowerCase())){while(m.nodeName.toLowerCase()!=="td"){m=m.parentNode}o=m.innerHTML}!/thead|tfoot/.test(m.parentNode.parentNode.nodeName.toLocaleLowerCase())&&o&&e.getDateValue(o);return e}]],l=j.length;while(l--){(function(m){i.addEvent(m[0],m[1],function(n){"function"===typeof m[2]&&m[2](n)},false)})(j[l])}if(e.Y){i.each(k[3],function(n,m){k.selectedIndex=m});k[3].value=e.Y;k[4].selectedIndex=e.M;e.createDay(e.Y,e.M)}else{i.trigger(e.elems[9],"click")}return e};h.getDateValue=function(l){var k=[],j=this.elems;k.push(+this.elems[3].value||this.Year);k.push(+this.elems[4].value+1||this.Month);k.push(+l||this.Day);this.selectDate=k;"function"===typeof this.ongetdate&&this.ongetdate.call(this,k);return this};h.update=function(){};h.createTableTitle=function(){var k=b.meta.week,j=k.length,l=[];while(j--){l.push('<th title="'+k[j]+'">'+k[j]+"</th>")}e.title="<thead>"+l.reverse().join("")+"</thead>";return e};h.createYear=function(){var k=[],l,j;l=e.endYear-e.startYear+1;while(l--){j=e.endYear-l;e.elems[3].options[l]=new Option(j,j,j===e.Year)}return e};h.createMonth=function(){var k=[],j=12;while(j--){e.elems[4].options[j]=new Option(j+1,j,j===e.Month)}return e};h.getMaxDays=function(k,l){var j=+l+1;l=j>12?1:j;k=j>12?(+k+1):k;return(new Date(+(new Date(k,l,1))-b.dayTime)).getDate()};h.getFirstDay=function(j,k){return new Date(j,k,1).getDay()};h.createDay=function(m,n){var l=this;m=+m;n=+n;m=Math.max(l.startYear,m);m=Math.min(l.endYear,m);n=isNaN(n)?l.Month:n;n=Math.max(n,0);n=Math.min(n,11);var k="_date_:"+m+":"+n,j=l.elems;a.cache[k]||(a.cache[k]=l.getDateString(m,n));l.render(j,k,m,n);return l};h.getDateString=function(s,k){var r=this,u=r.getMaxDays(s,k),p=r.getFirstDay(s,k),n=u+p,q=[],v=Math.ceil(n/7),t=v*7;for(var o=0;o<v;o++){q.push("</tr>");for(var l=0;l<7;l++){q.push((t--<=n&&u>0)?("<td "+(r.Date>new Date(s,k,u+1)?'class="oldDay"':"")+(s===r.Year&&k===r.Month&&u===r.Day?'class="currentDay"':"")+' title="'+s+r.style+(k+1)+r.style+u+'">'+(u--)+"</td>"):"<td></td>")}q.push("<tr>")}q=q.reverse().join("");("function"===typeof r.ongetdatestring)&&r.ongetdatestring.call(r,q);return q};h.toString=function(){return this.selectDate.join(this.style)};h.valueOf=function(){return this.selectDate};h.render=function(k,l,q,j){var n=this,p=b.meta,o;if("true"===n.hasFoot){o='<tfoot><tr><td colspan="7">'+q+p.year+(j+1)+p.month+"</td></tr></tfoot>"}k[2].innerHTML='<table cellpadding="5" border="1" cellspacing="0">'+n.title+a.cache[l]+("true"===n.hasFoot?o:"")+"</table>";n._OP_.appendChild(n.frame);("function"===typeof n.onrender)&&n.onrender.call(n,n.frame);return n};h.setCss=function(k){var j=[];i.is(k)==="object"&&(i.each(k,function(m,l){j.push(l+":"+m)}));this.elems[0].style.cssText=j.join(";")};h.show=function(){this.elems[0].style.display="block";return this};h.hide=function(){this.elems[0].style.display="none";return this};return e.init(),this.fn&&this.fn(),this};
+
+(function () {
+	var i = 12, p = document.getElementById('cal'), ts = document.getElementById('cals'), _;
+	//demo 1
+	Cal(ts, {a:1, b:2, ongetdate:function () {
+		var data=arguments[0]
+		alert(data[0]+'年'+data[1]+'月'+data[2]+'日');
+	}});
+	//demo 2
+	new Cal(ts, {a:5, b:6, Y:2015, M:12, ongetdate:function () {
+		alert(this.toString());
+	}, startYear:2000});
+	//demo 4
+	_ = Cal(ts).hide();
+	document.getElementById('_4').onclick = function () {
+		this.disabled='ture';
+		_.show();
+	}
+	//demo 3
+	for (; i--;) {
+		//console.log(12-i);
+		Cal(p, {Y:(new Date).getFullYear(), M:12 - i, hasTitle:'false', hasFoot:'true', ongetdate:function () {
+			alert(this.toString());
+			//this.hide();
+		},style:'/'});
+	}
+
+})()
+</script>
+<hr />
+
+ <div id="api">
+	 <h2>API</h2>
+	constructor：Cal(可以自行修改无依赖);<br />
+	实例化:new Cal(document.body);<br />
+	返回值:实例对象;
+
+	 <table>
+		<caption>参数</caption>
+		<tr>
+			<td>Node</td>
+		    <td>*htmlNode</td>
+		    <td>nodeType为1的节点，控件会被append此节点内</td>
+	    </tr>
+		<tr>
+		    <td>Object</td>
+			<td>O</td>
+		    <td>配置控件可选参数</td>
+	    </tr>
+		<tr>
+			<td>Number</td>
+		    <td>O.Y</td>
+		    <td>设置的年份，默认当年，范围(1970-当年+10)</td>
+	    </tr>
+		<tr>
+			<td>Number</td>
+		    <td>O.M</td>
+		    <td>设置的月份，默认当月，范围(1-12)</td>
+	    </tr>
+		<tr>
+			<td>String</td>
+		    <td>O.hasTitle</td>
+		    <td>是否有日期控制栏，默认有'true'</td>
+	    </tr>
+		<tr>
+			<td>String</td>
+		    <td>O.hasFoot</td>
+		    <td>是否有脚注用来显示年月，默认无'false'</td>
+	    </tr>
+		<tr>
+			<td>String</td>
+		    <td>O.style</td>
+		    <td>日期分隔符，默认'-'</td>
+	    </tr>
+		<tr>
+			<td>Number</td>
+		    <td>O.startYear</td>
+		    <td>开始年，默认2006</td>
+	    </tr>
+		<tr>
+			<td>Number</td>
+		    <td>O.endtYear</td>
+		    <td>结束年，默认当年加10</td>
+	    </tr>
+		 <tr>
+			<td>Function</td>
+		    <td>O.ongetdate</td>
+		    <td>用户点击日期单元格时触发，this指向实例，第一个参数为日期对应数组</td>
+	    </tr>
+		<tr>
+			<td>Function</td>
+		    <td>O.onrender</td>
+		    <td>控件插入值dom树时触发，this指向实例，第一个参数为控件对应的dom节点</td>
+	    </tr>
+		<tr>
+			<td>Function</td>
+		    <td>O.ongetdatestring</td>
+		    <td>获得月份所对应的日期字符串时触发，this指向实例，第一个参数为字符串</td>
+	    </tr>
+		<tr>
+			<td>Function</td>
+		    <td>O.oncalframe</td>
+		    <td>组成完毕控件node框架时触发，this指向实例，第一个参数为对应的dom节点</td>
+	    </tr>
+		<tr>
+			<td>Function</td>
+		    <td>fn</td>
+		    <td>类的回调函数，生成控件后触发</td>
+	    </tr>
+	 </table>
+
+
+	 <table>
+		<caption>实例方法</caption>
+		<tr>
+			<td>方法名</td>
+		    <td>参数</td>
+		    <td>返回值</td>
+	    </tr>
+		<tr>
+			<td>createDay</td>
+		    <td>Y:number/string(2012),M:number/string(0-11)</td>
+		    <td>实例（1储存日期字符串至Cal的cache中，是数据持久化；2调用render）</td>
+	    </tr>
+		<tr>
+			<td>render</td>
+		    <td>node:(this.elems),key:string('_date_:2012:0'),Y:number(2012),M:number(0-11)</td>
+		    <td>实例（渲染控件至dom树）</td>
+	    </tr>
+		<tr>
+			<td>getDateString</td>
+		    <td>Y:number(2012),M:number(0-11)</td>
+		    <td>htmlString</td>
+	    </tr>
+		<tr>
+			<td>toString</td>
+		    <td></td>
+		    <td>string '2012-12-12' (获取选中日期对应的字符串)</td>
+	    </tr>
+		<tr>
+			<td>valueOf</td>
+		    <td></td>
+		    <td>Array [2012,12,12] (获取选中日期对应的数组)</td>
+	    </tr>
+		<tr>
+			<td>hide</td>
+		    <td></td>
+		    <td>实例 (隐藏控件)</td>
+	    </tr>
+		<tr>
+			<td>show</td>
+		    <td></td>
+		    <td>实例 (显示控件)</td>
+	    </tr>
+		<tr>
+			<td>setCss</td>
+		    <td>Object({'font-size':'12px','width':'300px'})</td>
+		    <td>实例 (为控件添加样式)</td>
+	    </tr>
+	 </table>
+ </div>
+
+</body>
+</html>
